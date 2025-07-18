@@ -7,28 +7,29 @@ app.use(express.json());
 
 const PORT = 5000;
 
-let n=1
-const links=[]
+let n = 1;
+const links = [];
 
+// Function to generate shortcodes
+function generate_code() {
+    return 'abcd' + n++;
+}
 
-
-//create short url
+// Create short URL
 app.post('/shorturls', (req, res) => {
     const { url, validity = 30, shortcode } = req.body;
 
-    let code = shortcode;
-    function generate_code(){
-    return 'abcd'+n;
-    n+=1;
+    if (!url) {
+        return res.status(400).json({ error: 'URL is required.' });
     }
 
+    let code = shortcode;
+
     if (code) {
-        
         if (links.some(link => link.code === code)) {
-            return res.json({ error: 'Shortcode already exists.' });
+            return res.status(409).json({ error: 'Shortcode already exists.' });
         }
-    } 
-    else {
+    } else {
         do {
             code = generate_code();
         } while (links.some(link => link.code === code));
@@ -43,17 +44,28 @@ app.post('/shorturls', (req, res) => {
     });
 });
 
+// Open short URL (redirect to original)
+app.get('/:code', (req, res) => {
+    const { code } = req.params;
+    const link = links.find(link => link.code === code);
 
+    if (!link) {
+        return res.status(404).send('Short URL not found.');
+    }
 
-//opening link
-// app.get('/', (req.res)=>{});
+    if (Date.now() > link.expiry) {
+        return res.status(410).send('Short URL has expired.');
+    }
 
+    res.redirect(link.url);
+});
 
-//retrieve short url
-app.get('/shorturls')
+// Retrieve all short URLs
+app.get('/shorturls', (req, res) => {
+    res.json(links);
+});
 
-app.listen(PORT,()=>{
-    console.log(`server listening on ${PORT} port number`)
-})
-
-
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+});
