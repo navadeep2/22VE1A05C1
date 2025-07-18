@@ -10,7 +10,6 @@ const PORT = 5000;
 let n = 1;
 const links = [];
 
-// Function to generate shortcodes
 function generate_code() {
     return 'abcd' + n++;
 }
@@ -44,6 +43,11 @@ app.post('/shorturls', (req, res) => {
     });
 });
 
+// Retrieve all short URLs
+app.get('/shorturls', (req, res) => {
+    res.json(links);
+});
+
 // Open short URL (redirect to original)
 app.get('/:code', (req, res) => {
     const { code } = req.params;
@@ -60,10 +64,7 @@ app.get('/:code', (req, res) => {
     res.redirect(link.url);
 });
 
-// Retrieve all short URLs
-app.get('/shorturls', (req, res) => {
-    res.json(links);
-});
+
 
 // Start server
 app.listen(PORT, () => {
